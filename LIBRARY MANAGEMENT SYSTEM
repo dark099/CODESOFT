@@ -1,0 +1,128 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+using namespace std;
+
+class Book {
+public:
+    string title;
+    string author;
+    string ISBN;
+    bool isCheckedOut;
+    time_t dueDate;
+
+    Book(string t, string a, string i) : title(t), author(a), ISBN(i), isCheckedOut(false), dueDate(0) {}
+};
+
+class Library {
+private:
+    vector<Book> books;
+
+public:
+    void addBook(string title, string author, string ISBN) {
+        Book book(title, author, ISBN);
+        books.push_back(book);
+    }
+
+    vector<Book> searchBooks(string query) {
+        vector<Book> results;
+        for (const Book& book : books) {
+            if (book.title.find(query) != string::npos ||
+                book.author.find(query) != string::npos ||
+                book.ISBN.find(query) != string::npos) {
+                results.push_back(book);
+            }
+        }
+        return results;
+    }
+
+    bool checkoutBook(int index) {
+        if (index >= 0 && index < books.size() && !books[index].isCheckedOut) {
+            books[index].isCheckedOut = true;
+            time_t now = time(nullptr);
+            books[index].dueDate = now + 604800;  // Due in 7 days (in seconds)
+            return true;
+        }
+        return false;
+    }
+
+    bool returnBook(int index) {
+        if (index >= 0 && index < books.size() && books[index].isCheckedOut) {
+            books[index].isCheckedOut = false;
+            books[index].dueDate = 0;
+            return true;
+        }
+        return false;
+    }
+};
+
+int main() {
+    Library library;
+
+    library.addBook("The Catcher in the Rye", "J.D. Salinger", "9780316769488");
+    library.addBook("To Kill a Mockingbird", "Harper Lee", "9780061120084");
+    library.addBook("1984", "George Orwell", "9780451524935");
+
+    while (true) {
+        cout << "Library Management System\n";
+        cout << "1. Search for a book\n";
+        cout << "2. Check out a book\n";
+        cout << "3. Return a book\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+
+        int choice;
+        cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                cin.ignore(); 
+                cout << "Enter a title, author, or ISBN to search: ";
+                string query;
+                getline(cin, query);
+                vector<Book> results = library.searchBooks(query);
+                if (results.empty()) {
+                    cout << "No books found.\n";
+                } else {
+                    cout << "Search results:\n";
+                    for (size_t i = 0; i < results.size(); ++i) {
+                        cout << i + 1 << ". " << results[i].title << " by " << results[i].author << " (ISBN: " << results[i].ISBN << ")\n";
+                    }
+                }
+                break;
+            }
+            case 2: {
+                cout << "Enter the index of the book to check out: ";
+                int index;
+                cin >> index;
+                bool success = library.checkoutBook(index - 1);
+                if (success) {
+                    cout << "Book checked out successfully.\n";
+                } else {
+                    cout << "Invalid book index or book is already checked out.\n";
+                }
+                break;
+            }
+            case 3: {
+                cout << "Enter the index of the book to return: ";
+                int index;
+                cin >> index;
+                bool success = library.returnBook(index - 1);
+                if (success) {
+                    cout << "Book returned successfully.\n";
+                } else {
+                    cout << "Invalid book index or book is not checked out.\n";
+                }
+                break;
+            }
+            case 4:
+                cout << "Exiting the program.\n";
+                return 0;
+            default:
+                cout << "Invalid choice. Please try again.\n";
+        }
+    }
+
+    return 0;
+}
